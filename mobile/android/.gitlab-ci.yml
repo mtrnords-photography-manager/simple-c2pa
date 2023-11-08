@@ -13,7 +13,8 @@ services:
     alias: localhost
 
 before_script:
-  - apk add --no-cache curl build-base libgcc bash
+  - apk update
+  - apk add --no-cache curl build-base libgcc bash openssl
   - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   - source $HOME/.cargo/env
   - rustup override set $RUST_VERSION
