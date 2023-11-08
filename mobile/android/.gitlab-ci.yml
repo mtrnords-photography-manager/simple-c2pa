@@ -13,7 +13,7 @@ services:
     alias: localhost
 
 before_script:
-  - apk add --no-cache curl build-base libgcc
+  - apk add --no-cache curl build-base libgcc bash
   - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   - source $HOME/.cargo/env
   - rustup override set $RUST_VERSION
@@ -23,8 +23,9 @@ build_android:
   stage: build
   script:
     - pwd
+    - which bash
     - chmod +x ./mobile/android/build.sh
-    - ./mobile/android/build.sh
+    - /bin/bash ./mobile/android/build.sh
   artifacts:
     paths:
       - ./out/
