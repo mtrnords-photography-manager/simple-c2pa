@@ -1,0 +1,17 @@
+[package]
+name = "simple-c2pa"
+version = "0.6.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.75"
+c2pa = { version = "0.28.0", features = ["file_io", "add_thumbnails"] }
+log = "0.4.20"
+openssl = "0.10.48"
+ring = "0.17.5"
+serde = "1.0.192"
+serde_json = "1.0.108"
+tempfile = "3.8.1"
+
+[lib]
+name = "simple_c2pa"

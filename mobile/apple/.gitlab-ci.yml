@@ -1,0 +1,30 @@
+variables:
+  HOMEBREW_NO_AUTO_UPDATE: 1
+
+.macos_saas_runners:
+  tags:
+    - saas-macos-medium-m1
+  image: macos-13-xcode-14
+  before_script:
+    - echo "started by ${GITLAB_USER_NAME}"
+    - brew install rust
+    - mkdir -p ./mobile/apple/out
+    - touch ./mobile/apple/out/test123.txt
+
+build:
+  extends:
+    - .macos_saas_runners
+  stage: build
+  script:
+    - echo "running scripts in the build job"
+
+test:
+  extends:
+    - .macos_saas_runners
+  stage: test
+  script:
+    - echo "running scripts in the test job"
+
+artifacts:
+  paths:
+    - ./mobile/apple/out/

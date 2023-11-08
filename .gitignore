@@ -1,0 +1,9 @@
+outputs
+target
+out
+.*DS_Store
+test_keys
+.vscode
+cache/
+bindings/
+jniLibs/

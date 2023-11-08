@@ -1,0 +1,7 @@
+include:
+  - project: "mobile/apple"
+    ref: "main"
+    file: "mobile/.gitlab-ci-apple.yml"
+  - project: "mobile/android"
+    ref: "main"
+    file: "mobile/.gitlab-ci.android.yml"
