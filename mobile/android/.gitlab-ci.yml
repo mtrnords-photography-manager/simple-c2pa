@@ -1,3 +1,6 @@
+stages:
+  - build
+
 image: docker:latest
 
 variables:
@@ -20,7 +23,6 @@ build_android:
   stage: build
   script:
     - ./mobile/android/build.sh
-
-artifacts:
-  paths:
-    - ./mobile/android/out/
+  artifacts:
+    paths:
+      - ./mobile/android/out/

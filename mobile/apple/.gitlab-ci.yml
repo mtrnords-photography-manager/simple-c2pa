@@ -1,3 +1,7 @@
+stages:
+  - build
+  - test
+
 variables:
   HOMEBREW_NO_AUTO_UPDATE: 1
 
@@ -17,6 +21,9 @@ build_apple:
   stage: build
   script:
     - echo "running scripts in the build job"
+  artifacts:
+    paths:
+      - ./mobile/apple/out/
 
 test_apple:
   extends:
@@ -24,7 +31,3 @@ test_apple:
   stage: test
   script:
     - echo "running scripts in the test job"
-
-artifacts:
-  paths:
-    - ./mobile/apple/out/
