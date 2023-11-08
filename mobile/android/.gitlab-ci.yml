@@ -16,7 +16,7 @@ before_script:
   - rustup override set $RUST_VERSION
   - cargo install cross
 
-build:
+build_android:
   stage: build
   script:
     - ./mobile/android/build.sh

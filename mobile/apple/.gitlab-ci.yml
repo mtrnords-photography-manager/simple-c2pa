@@ -11,14 +11,14 @@ variables:
     - mkdir -p ./mobile/apple/out
     - touch ./mobile/apple/out/test123.txt
 
-build:
+build_apple:
   extends:
     - .macos_saas_runners
   stage: build
   script:
     - echo "running scripts in the build job"
 
-test:
+test_apple:
   extends:
     - .macos_saas_runners
   stage: test

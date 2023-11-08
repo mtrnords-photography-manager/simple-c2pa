@@ -1,7 +1,12 @@
-include:
-  - project: "mobile/apple"
-    ref: "main"
-    file: "mobile/.gitlab-ci-apple.yml"
-  - project: "mobile/android"
-    ref: "main"
-    file: "mobile/.gitlab-ci.android.yml"
+stages:
+  - triggers
+
+trigger_apple:
+  stage: triggers
+  trigger:
+    include: "mobile/apple/.gitlab-ci.yml"
+
+trigger_android:
+  stage: triggers
+  trigger:
+    include: "mobile/android/.gitlab-ci.yml"
