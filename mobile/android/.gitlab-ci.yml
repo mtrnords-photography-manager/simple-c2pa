@@ -22,7 +22,8 @@ before_script:
 build_android:
   stage: build
   script:
-    - ./mobile/android/build.sh
+    - pwd
+    - ./build.sh
   artifacts:
     paths:
-      - ./mobile/android/out/
+      - ./out/

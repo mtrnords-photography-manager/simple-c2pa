@@ -12,8 +12,9 @@ variables:
   before_script:
     - echo "started by ${GITLAB_USER_NAME}"
     - brew install rust
-    - mkdir -p ./mobile/apple/out
-    - touch ./mobile/apple/out/test123.txt
+    - pwd
+    - mkdir -p ./out
+    - touch ./out/test123.txt
 
 build_apple:
   extends:
@@ -23,7 +24,7 @@ build_apple:
     - echo "running scripts in the build job"
   artifacts:
     paths:
-      - ./mobile/apple/out/
+      - ./out/
 
 test_apple:
   extends:
