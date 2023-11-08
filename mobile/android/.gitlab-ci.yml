@@ -23,7 +23,8 @@ build_android:
   stage: build
   script:
     - pwd
-    - ./build.sh
+    - chmod +x ./mobile/android/build.sh
+    - ./mobile/android/build.sh
   artifacts:
     paths:
       - ./out/
