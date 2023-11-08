@@ -17,15 +17,15 @@ before_script:
   - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   - source $HOME/.cargo/env
   - rustup override set $RUST_VERSION
-  - cargo install cross
+  - cargo install cross --git https://github.com/cross-rs/cross
 
 build_android:
   stage: build
   script:
-    - pwd
-    - which bash
     - chmod +x ./mobile/android/build.sh
     - /bin/bash ./mobile/android/build.sh
+  variables:
+    CROSS_CONTAINER_IN_CONTAINER: "true"
   artifacts:
     paths:
-      - ./out/
+      - ./mobile/android/out/
