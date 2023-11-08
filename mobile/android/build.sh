@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MOBILE_DIR="mobile"
+MOBILE_DIR="$(pwd)/mobile"
 ANDROID_DIR="${MOBILE_DIR}/android"
 TARGET_DIR="${ANDROID_DIR}/target"
 OUT_DIR="${ANDROID_DIR}/out"
@@ -24,17 +24,18 @@ declare -A arch_dir_map=(
 #    ["aarch64-linux-android"]="arm64-v8a"
 )
 for architecture in "${!arch_dir_map[@]}"; do
-    TARGET_DIR="$(pwd)/${architecture}"
-    echo ${TARGET_DIR}}
+    ARCH_TARGET_DIR="${TARGET_DIR}/${architecture}"
+    echo ${ARCH_TARGET_DIR}
+    echo ${MOBILE_DIR}
     if [ "${BUILD_MODE}" == "release" ]; then
-        cross build --manifest-path "${MOBILE_DIR}/Cargo.toml" --target "$architecture" --target-dir="${TARGET_DIR}" --release
+        cross build --manifest-path "${MOBILE_DIR}/Cargo.toml" --target "$architecture" --target-dir="${ARCH_TARGET_DIR}" --release
     else
-        cross build --manifest-path "${MOBILE_DIR}/Cargo.toml" --target "$architecture" --target-dir="${TARGET_DIR}"
+        cross build --manifest-path "${MOBILE_DIR}/Cargo.toml" --target "$architecture" --target-dir="${ARCH_TARGET_DIR}"
     fi
 
     DESTINATION_DIR="${JNILIBS_DIR}/${arch_dir_map[$architecture]}"
     mkdir -p ${DESTINATION_DIR}
-    cp "${TARGET_DIR}/${BUILD_MODE}/${LIB_NAME}" "${DESTINATION_DIR}/${FIXED_LIB_NAME}"
+    cp "${ARCH_TARGET_DIR}/${BUILD_MODE}/${LIB_NAME}" "${DESTINATION_DIR}/${FIXED_LIB_NAME}"
 done
 
 
