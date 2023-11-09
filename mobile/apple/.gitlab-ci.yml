@@ -31,7 +31,7 @@ release_apple:
     - echo "running release_apple for $TAG"
   release:
     tag_name: "v0.$CI_PIPELINE_IID"
-    description: "v0.$CI_PIPELINE_IID"
+    description: "apple-v0.$CI_PIPELINE_IID"
     ref: "$CI_COMMIT_SHA"
     assets:
       links:

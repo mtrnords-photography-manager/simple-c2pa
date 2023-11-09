@@ -33,6 +33,8 @@ for architecture in "${!arch_dir_map[@]}"; do
     DESTINATION_DIR="${JNILIBS_DIR}/${arch_dir_map[$architecture]}"
     mkdir -p ${DESTINATION_DIR}
     cp "${TARGET_DIR}/${architecture}/${BUILD_MODE}/${LIB_NAME}" "${DESTINATION_DIR}/${FIXED_LIB_NAME}"
+    (cd "${OUT_DIR}" && zip -r "jniLibs.zip" "jniLibs")
+    (cd "${OUT_DIR}" && zip -r "java.zip" "java")
 done
 
 

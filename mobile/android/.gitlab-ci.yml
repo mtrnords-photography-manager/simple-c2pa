@@ -1,18 +1,41 @@
 stages:
   - build
-
-.macos_runners:
-  tags:
-    - xxx-proofmode-macos
-  before_script:
-    - echo "started by ${GITLAB_USER_NAME}"
+  - upload
+  - release
 
 build_android:
-  extends:
-    - .macos_runners
+  tags:
+    - proofmode-macos
   stage: build
   script:
     - ./mobile/android/build.sh
   artifacts:
     paths:
       - ./mobile/android/out/
+
+upload_android:
+  stage: upload
+  image: curlimages/curl:latest
+  script:
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/android/out/java.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/java.zip"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/android/out/jniLibs.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/jniLibs.zip"'
+
+release_android:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - echo "running release_android for $TAG"
+  release:
+    tag_name: "v0.$CI_PIPELINE_IID"
+    description: "android-v0.$CI_PIPELINE_IID"
+    ref: "$CI_COMMIT_SHA"
+    assets:
+      links:
+        - name: "simple_c2pa_mobile.swift"
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/java.zip"
+        - name: "simple_c2pa_mobile.xcframework.zip"
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/jniLibs.zip"
