@@ -17,8 +17,8 @@ upload_android:
   stage: upload
   image: curlimages/curl:latest
   script:
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/android/out/java.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/java.zip"'
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/android/out/jniLibs.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/jniLibs.zip"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/android/out/java.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/android-v0.${CI_PIPELINE_IID}/java.zip"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/android/out/jniLibs.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/android-v0.${CI_PIPELINE_IID}/jniLibs.zip"'
 
 release_android:
   stage: release
@@ -30,12 +30,12 @@ release_android:
   script:
     - echo "running release_android for $TAG"
   release:
-    tag_name: "v0.$CI_PIPELINE_IID"
+    tag_name: "android-v0.$CI_PIPELINE_IID"
     description: "android-v0.$CI_PIPELINE_IID"
     ref: "$CI_COMMIT_SHA"
     assets:
       links:
-        - name: "simple_c2pa_mobile.swift"
-          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/java.zip"
-        - name: "simple_c2pa_mobile.xcframework.zip"
-          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/jniLibs.zip"
+        - name: "java.zip"
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/android-v0.${CI_PIPELINE_IID}/java.zip"
+        - name: "jniLibs.zip"
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/android-v0.${CI_PIPELINE_IID}/jniLibs.zip"

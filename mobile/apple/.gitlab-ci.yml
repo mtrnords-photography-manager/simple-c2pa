@@ -17,8 +17,8 @@ upload_apple:
   stage: upload
   image: curlimages/curl:latest
   script:
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/apple/out/simple_c2pa_mobile.swift "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.swift"'
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/apple/out/simple_c2pa_mobile.xcframework.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.xcframework.zip"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/apple/out/simple_c2pa_mobile.swift "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/apple-v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.swift"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/apple/out/simple_c2pa_mobile.xcframework.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/apple-v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.xcframework.zip"'
 
 release_apple:
   stage: release
@@ -30,12 +30,12 @@ release_apple:
   script:
     - echo "running release_apple for $TAG"
   release:
-    tag_name: "v0.$CI_PIPELINE_IID"
+    tag_name: "apple-v0.$CI_PIPELINE_IID"
     description: "apple-v0.$CI_PIPELINE_IID"
     ref: "$CI_COMMIT_SHA"
     assets:
       links:
         - name: "simple_c2pa_mobile.swift"
-          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.swift"
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/apple-v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.swift"
         - name: "simple_c2pa_mobile.xcframework.zip"
-          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.xcframework.zip"
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/apple-v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.xcframework.zip"
