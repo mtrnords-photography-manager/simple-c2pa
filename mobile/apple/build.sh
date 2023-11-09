@@ -1,7 +1,7 @@
 #!/bin/sh
 
 MOBILE_DIR="mobile"
-APPLE_DIR="${MOBILE_DIR}/android"
+APPLE_DIR="${MOBILE_DIR}/apple"
 TARGET_DIR="${APPLE_DIR}/target"
 OUT_DIR="${APPLE_DIR}/out"
 BINDINGS_DIR="${MOBILE_DIR}/bindings"
