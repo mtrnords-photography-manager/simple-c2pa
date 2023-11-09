@@ -15,7 +15,7 @@ services:
 
 before_script:
   - apt update
-  - apt install -y curl build-essential gcc bash openssl libssl-dev
+  - apt install -y curl build-essential gcc bash openssl libssl-dev docker
   - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   - source $HOME/.cargo/env
   - rustup override set $RUST_VERSION
