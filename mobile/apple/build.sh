@@ -39,7 +39,7 @@ xcodebuild -create-xcframework \
 	   -library "${TARGET_DIR}/simulators.a" \
 	   -headers "${NEW_HEADER_DIR}" \
     -output "${OUT_DIR}/${NAME}.xcframework"
-		
-zip -r "${OUT_DIR}/${NAME}.xcframework.zip" "${OUT_DIR}/${NAME}.xcframework"
+
+(cd "${OUT_DIR}" && zip -r "${NAME}.xcframework.zip" "${NAME}.xcframework")
 rm -rf "${OUT_DIR}/${NAME}.xcframework"
 cp "${BINDINGS_DIR}/${NAME}.swift" "${OUT_DIR}/"

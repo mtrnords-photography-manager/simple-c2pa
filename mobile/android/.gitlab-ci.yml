@@ -3,7 +3,7 @@ stages:
 
 .macos_runners:
   tags:
-    - proofmode-macos
+    - xxx-proofmode-macos
   before_script:
     - echo "started by ${GITLAB_USER_NAME}"
 

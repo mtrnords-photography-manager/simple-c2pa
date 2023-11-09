@@ -1,22 +1,24 @@
 stages:
   - build
+  - upload
   - release
 
-.macos_runners:
+build_apple:
   tags:
     - proofmode-macos
-  before_script:
-    - echo "started by ${GITLAB_USER_NAME}"
-
-build_apple:
-  extends:
-    - .macos_runners
   stage: build
   script:
     - ./mobile/apple/build.sh
   artifacts:
     paths:
       - ./mobile/apple/out/
+
+upload_apple:
+  stage: upload
+  image: curlimages/curl:latest
+  script:
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/apple/out/simple_c2pa_mobile.swift "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.swift"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./mobile/apple/out/simple_c2pa_mobile.xcframework.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.xcframework.zip"'
 
 release_apple:
   stage: release
@@ -34,6 +36,6 @@ release_apple:
     assets:
       links:
         - name: "simple_c2pa_mobile.swift"
-          url: "https://gitlab.com/guardianproject/proofmode/simple-c2pa/-/jobs/$JOB_ID/artifacts/download"
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.swift"
         - name: "simple_c2pa_mobile.xcframework.zip"
-          url: "https://gitlab.com/guardianproject/proofmode/simple-c2pa/-/jobs/$JOB_ID/artifacts/download"
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa_mobile/v0.${CI_PIPELINE_IID}/simple_c2pa_mobile.xcframework.zip"
