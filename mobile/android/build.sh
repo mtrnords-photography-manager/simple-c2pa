@@ -25,9 +25,9 @@ declare -A arch_dir_map=(
 )
 for architecture in "${!arch_dir_map[@]}"; do
     if [ "${BUILD_MODE}" == "release" ]; then
-        cross build --release --manifest-path "${MOBILE_DIR}/Cargo.toml" --target "$architecture" 
+        cross build --release --manifest-path "${MOBILE_DIR}/Cargo.toml" --target "$architecture" --target-dir="${TARGET_DIR}"
     else
-        cross build --manifest-path "${MOBILE_DIR}/Cargo.toml" --target "$architecture" 
+        cross build --manifest-path "${MOBILE_DIR}/Cargo.toml" --target "$architecture" --target-dir="${TARGET_DIR}"
     fi
 
     DESTINATION_DIR="${JNILIBS_DIR}/${arch_dir_map[$architecture]}"
