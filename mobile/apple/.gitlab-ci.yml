@@ -1,34 +1,18 @@
 stages:
   - build
-  - test
 
-variables:
-  HOMEBREW_NO_AUTO_UPDATE: 1
-
-.macos_saas_runners:
+.macos_runners:
   tags:
-    - saas-macos-medium-m1
-  image: macos-13-xcode-14
+    - proofmode-macos
   before_script:
     - echo "started by ${GITLAB_USER_NAME}"
-    - brew install rust
-    - pwd
-    - mkdir -p ./out
-    - touch ./out/test123.txt
 
 build_apple:
   extends:
-    - .macos_saas_runners
+    - .macos_runners
   stage: build
   script:
-    - echo "running scripts in the build job"
+    - /bin/bash ./mobile/apple/build.sh
   artifacts:
     paths:
-      - ./out/
-
-test_apple:
-  extends:
-    - .macos_saas_runners
-  stage: test
-  script:
-    - echo "running scripts in the test job"
+      - ./mobile/apple/out/

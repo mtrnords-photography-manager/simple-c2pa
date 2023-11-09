@@ -1,38 +1,17 @@
 stages:
   - build
 
-image: debian:bookworm
-
-variables:
-  DOCKER_HOST: tcp://localhost:2375/
-  DOCKER_DRIVER: overlay2
-  RUST_VERSION: stable
-  CROSS_CONTAINER_IN_CONTAINER: "true"
-
-services:
-  - name: docker:dind
-    alias: localhost
-
-before_script:
-  - apt-get update
-  - apt-get install -y curl build-essential gcc openssl libssl-dev apt-transport-https ca-certificates gnupg software-properties-common
-  - install -m 0755 -d /etc/apt/keyrings
-  - curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  - chmod a+r /etc/apt/keyrings/docker.gpg
-  - echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-  - apt-get update
-  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-  - which docker
-  - docker ps
-  - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  - source $HOME/.cargo/env
-  - rustup override set $RUST_VERSION
-  - cargo install cross --git https://github.com/cross-rs/cross
+.macos_runners:
+  tags:
+    - proofmode-macos
+  before_script:
+    - echo "started by ${GITLAB_USER_NAME}"
 
 build_android:
+  extends:
+    - .macos_runners
   stage: build
   script:
-    - chmod +x ./mobile/android/build.sh
     - /bin/bash ./mobile/android/build.sh
   artifacts:
     paths:
