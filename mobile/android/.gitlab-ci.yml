@@ -14,8 +14,14 @@ services:
     alias: localhost
 
 before_script:
-  - apt update
-  - apt install -y curl build-essential gcc bash openssl libssl-dev docker
+  - apt-get update
+  - apt-get install -y curl build-essential gcc openssl libssl-dev apt-transport-https ca-certificates gnupg2 software-properties-common
+  - curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+  - add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io
+  - usermod -aG docker $USER
+  - newgrp docker
   - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   - source $HOME/.cargo/env
   - rustup override set $RUST_VERSION
