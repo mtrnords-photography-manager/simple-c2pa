@@ -28,7 +28,7 @@ mkdir -p "${NEW_HEADER_DIR}"
 cp "${HEADER_PATH}" "${NEW_HEADER_DIR}/"
 cp "${BINDINGS_DIR}/${NAME}FFI.modulemap" "${NEW_HEADER_DIR}/module.modulemap"
 
-rm -rf "${OUT_DIR}
+rm -rf "${OUT_DIR}"
 mkdir -p ${OUT_DIR}
 
 xcrun lipo -create -output "${TARGET_DIR}/simulators.a" "${TARGET_DIR}/aarch64-apple-ios-sim/${BUILD_MODE}/${STATIC_LIB_NAME}" "${TARGET_DIR}/x86_64-apple-ios/${BUILD_MODE}/${STATIC_LIB_NAME}"
@@ -39,5 +39,7 @@ xcodebuild -create-xcframework \
 	   -library "${TARGET_DIR}/simulators.a" \
 	   -headers "${NEW_HEADER_DIR}" \
     -output "${OUT_DIR}/${NAME}.xcframework"
-
+		
+zip -r "${OUT_DIR}/${NAME}.xcframework.zip" "${OUT_DIR}/${NAME}.xcframework"
+rm -rf "${OUT_DIR}/${NAME}.xcframework"
 cp "${BINDINGS_DIR}/${NAME}.swift" "${OUT_DIR}/"
