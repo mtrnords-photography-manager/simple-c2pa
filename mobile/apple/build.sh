@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 MOBILE_DIR="$(pwd)/mobile"
 APPLE_DIR="${MOBILE_DIR}/apple"
@@ -19,18 +19,17 @@ rustup target add aarch64-apple-ios-sim
 cargo build --manifest-path "${MOBILE_DIR}/Cargo.toml" --target-dir="${TARGET_DIR}"
 
 # build the libraries
-cargo build --target aarch64-apple-darwin --release
-cargo build --target aarch64-apple-ios --release
-cargo build --target x86_64-apple-ios --release
-cargo build --target aarch64-apple-ios-sim --release
+cargo build --manifest-path "${MOBILE_DIR}/Cargo.toml" --target aarch64-apple-darwin --release --target-dir="${TARGET_DIR}"
+cargo build --manifest-path "${MOBILE_DIR}/Cargo.toml" --target aarch64-apple-ios --release --target-dir="${TARGET_DIR}"
+cargo build --manifest-path "${MOBILE_DIR}/Cargo.toml" --target x86_64-apple-ios --release --target-dir="${TARGET_DIR}"
+cargo build --manifest-path "${MOBILE_DIR}/Cargo.toml" --target aarch64-apple-ios-sim --release --target-dir="${TARGET_DIR}"
 
 mkdir -p "${NEW_HEADER_DIR}"
 cp "${HEADER_PATH}" "${NEW_HEADER_DIR}/"
 cp "${BINDINGS_DIR}/${NAME}FFI.modulemap" "${NEW_HEADER_DIR}/module.modulemap"
 
+rm -rf "${OUT_DIR}
 mkdir -p ${OUT_DIR}
-rm -rf "${OUT_DIR}/${NAME}_framework.xcframework"
-
 
 xcrun lipo -create -output "${TARGET_DIR}/simulators.a" "${TARGET_DIR}/aarch64-apple-ios-sim/${BUILD_MODE}/${STATIC_LIB_NAME}" "${TARGET_DIR}/x86_64-apple-ios/${BUILD_MODE}/${STATIC_LIB_NAME}"
 
@@ -39,6 +38,6 @@ xcodebuild -create-xcframework \
 	   -headers "${NEW_HEADER_DIR}" \
 	   -library "${TARGET_DIR}/simulators.a" \
 	   -headers "${NEW_HEADER_DIR}" \
-    -output "${OUT_DIR}/${NAME}_framework.xcframework"
+    -output "${OUT_DIR}/${NAME}.xcframework"
 
 cp "${BINDINGS_DIR}/${NAME}.swift" "${OUT_DIR}/"

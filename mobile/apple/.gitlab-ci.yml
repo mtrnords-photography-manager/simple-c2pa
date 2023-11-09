@@ -12,7 +12,7 @@ build_apple:
     - .macos_runners
   stage: build
   script:
-    - /bin/bash ./mobile/apple/build.sh
+    - ./mobile/apple/build.sh
   artifacts:
     paths:
       - ./mobile/apple/out/

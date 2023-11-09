@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 MOBILE_DIR="$(pwd)/mobile"
 ANDROID_DIR="${MOBILE_DIR}/android"

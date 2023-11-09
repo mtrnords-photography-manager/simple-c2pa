@@ -12,7 +12,7 @@ build_android:
     - .macos_runners
   stage: build
   script:
-    - /bin/bash ./mobile/android/build.sh
+    - ./mobile/android/build.sh
   artifacts:
     paths:
       - ./mobile/android/out/
