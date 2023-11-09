@@ -1,20 +1,21 @@
 stages:
   - build
 
-image: docker:latest
+image: debian:bookworm
 
 variables:
   DOCKER_HOST: tcp://localhost:2375/
   DOCKER_DRIVER: overlay2
   RUST_VERSION: stable
+  CROSS_CONTAINER_IN_CONTAINER: "true"
 
 services:
   - name: docker:dind
     alias: localhost
 
 before_script:
-  - apk update
-  - apk add --no-cache curl build-base libgcc bash openssl
+  - apt update
+  - apt install -y curl build-essential gcc bash openssl libssl-dev
   - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   - source $HOME/.cargo/env
   - rustup override set $RUST_VERSION
@@ -25,8 +26,6 @@ build_android:
   script:
     - chmod +x ./mobile/android/build.sh
     - /bin/bash ./mobile/android/build.sh
-  variables:
-    CROSS_CONTAINER_IN_CONTAINER: "true"
   artifacts:
     paths:
       - ./mobile/android/out/
