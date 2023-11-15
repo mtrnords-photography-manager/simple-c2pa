@@ -32,8 +32,6 @@ fn add_proof_assert(
     proof_path: &str,
     output_path: &str,
 ) {
-    let proof_data = fs::read_to_string(proof_path).expect("Can't read proof");
-
     let content_credentials_key = fs::read_to_string(cert_key).expect("Can't load cert");
     let content_credentials_certificate = fs::read_to_string(cert_path).expect("Can't load cert");
 
@@ -44,16 +42,16 @@ fn add_proof_assert(
 
     cc.add_proof_assertion(image_path.to_string(), output_path.to_string(), proof_data);
 }
-
+*/
 fn add_assert(
-    cert_path: &str,
-    cert_key: &str,
-    is_capture: &bool,
-    image_path: &str,
-    identity: &str,
-    _fingerprint: &str,
-    allow_machine_learning: &bool,
-    output_path: &str,
+    cert_path: String,
+    cert_key: String,
+    is_capture: bool,
+    image_path: String,
+    identity: String,
+    _fingerprint: String,
+    allow_machine_learning: bool,
+    output_path: String,
 ) {
     let content_credentials_key = fs::read_to_string(cert_key).expect("Can't load cert");
     let content_credentials_certificate = fs::read_to_string(cert_path).expect("Can't load cert");
@@ -89,4 +87,3 @@ fn add_assert(
         );
     }
 }
-*/

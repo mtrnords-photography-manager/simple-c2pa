@@ -1,6 +1,3 @@
-use anyhow::Result;
-use std::fs;
-
 mod content_credentials;
 pub use content_credentials::ContentCredentials;
 

@@ -1,3 +1,5 @@
 namespace simple_c2pa_mobile {
-		void generate_cert(string fingerprint, string cert_path, string cert_key_path);
+	void generate_cert(string fingerprint, string cert_path, string cert_key_path);
+	
+	void add_assert(string cert_path, string cert_key, boolean is_capture, string image_path, string identity, string fingerprint, boolean allow_machine_learning, string output_path);
 };

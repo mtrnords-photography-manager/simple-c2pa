@@ -8,7 +8,7 @@ build_android:
     - proofmode-macos
   stage: build
   script:
-    - ./mobile/android/build.sh
+    - make android
   artifacts:
     paths:
       - ./mobile/android/out/

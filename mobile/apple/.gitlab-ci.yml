@@ -8,7 +8,7 @@ build_apple:
     - proofmode-macos
   stage: build
   script:
-    - ./mobile/apple/build.sh
+    - make apple
   artifacts:
     paths:
       - ./mobile/apple/out/
