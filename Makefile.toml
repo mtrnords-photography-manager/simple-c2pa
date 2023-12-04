@@ -62,7 +62,7 @@ dependencies = [
 ]
 
 [tasks.android-install-dependencies]
-script = 'cargo install cross'
+script = 'cargo install cross --git https://github.com/cross-rs/cross'
 dependencies = ["common-install-dependencies"]
 
 [tasks.android-build-libraries]
@@ -74,7 +74,7 @@ cross build --target aarch64-linux-android --release
 '''
 
 [tasks.android-build-bindings]
-script = 'cargo run --bin uniffi-bindgen generate --language kotlin --library ./target/armeabi-v7a/release/libsimple_c2pa.so --out-dir ${BINDINGS_DIR}/kotlin'
+script = 'cargo run --bin uniffi-bindgen generate --language kotlin --library ./target/x86_64-linux-android/release/libsimple_c2pa.so --out-dir ${BINDINGS_DIR}/kotlin'
 
 [tasks.android-assemble-aar-files]
 env = { NAME = "simple_c2pa", LIB_NAME = "lib${NAME}.so", OUT_DIR = "out/android", JNILIBS_DIR = "${OUT_DIR}/jniLibs", ANDROID_BINDINGS_DIR = "kotlin/info/guardianproject/simple_c2pa" }
