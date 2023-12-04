@@ -63,6 +63,7 @@ impl FileData {
 }
 
 #[derive(Error, Debug, uniffi::Error)]
+#[uniffi(flat_error)]
 pub enum SimpleC2PAError {
     #[error("Failed with message: {message}")]
     Failure { message: String },
