@@ -5,7 +5,7 @@ stages:
 
 build_android:
   tags:
-    - proofmode-macos
+    - proofmode-debian
   stage: build
   script:
     - cargo make android-build
