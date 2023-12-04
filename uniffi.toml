@@ -1,0 +1,5 @@
+[bindings.swift]
+module_name = "SimpleC2PA"
+
+[bindings.kotlin]
+package_name = "info.guardianproject.simple_c2pa"

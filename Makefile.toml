@@ -1,0 +1,101 @@
+[env]
+BUILD_MODE = "release"
+TARGET_DIR = "target"
+BINDINGS_DIR = "bindings"
+OUT_DIR = "out"
+
+[tasks.clean-build-dirs]
+script = '''
+rm -rf "${TARGET_DIR}"
+rm -rf "${BINDINGS_DIR}"
+rm -rf "${OUT_DIR}"
+'''
+
+[tasks.common-install-dependencies]
+script = 'cargo install --force cargo-make'
+
+[tasks.apple-install-dependencies]
+script = 'rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim'
+
+[tasks.apple-build-bindings]
+script = 'cargo run --bin uniffi-bindgen generate --language swift --library ${TARGET_DIR}/aarch64-apple-ios/release/libsimple_c2pa.a --out-dir ${BINDINGS_DIR}/swift'
+
+[tasks.apple-build-libraries]
+script = '''
+cargo build --target aarch64-apple-darwin --release
+cargo build --target aarch64-apple-ios --release
+cargo build --target x86_64-apple-ios --release
+cargo build --target aarch64-apple-ios-sim --release
+'''
+dependencies = ["common-install-dependencies"]
+
+[tasks.apple-assemble-framework]
+env = { NAME = "SimpleC2PA", LIB_NAME = "simple_c2pa", HEADER_PATH = "${BINDINGS_DIR}/swift/${NAME}FFI.h", NEW_HEADER_DIR = "${BINDINGS_DIR}/swift/include", STATIC_LIB_NAME = "lib${LIB_NAME}.a", OUT_DIR = "out/apple" }
+script = '''
+mkdir -p "${NEW_HEADER_DIR}"
+cp "${HEADER_PATH}" "${NEW_HEADER_DIR}/"
+cp "${BINDINGS_DIR}/swift/${NAME}FFI.modulemap" "${NEW_HEADER_DIR}/module.modulemap"
+
+rm -rf "${OUT_DIR}"
+mkdir -p ${OUT_DIR}
+
+xcrun lipo -create -output "${TARGET_DIR}/simulators.a" "${TARGET_DIR}/aarch64-apple-ios-sim/${BUILD_MODE}/${STATIC_LIB_NAME}" "${TARGET_DIR}/x86_64-apple-ios/${BUILD_MODE}/${STATIC_LIB_NAME}"
+
+xcodebuild -create-xcframework \
+	   -library "${TARGET_DIR}/aarch64-apple-ios/${BUILD_MODE}/${STATIC_LIB_NAME}" \
+	   -headers "${NEW_HEADER_DIR}" \
+	   -library "${TARGET_DIR}/simulators.a" \
+	   -headers "${NEW_HEADER_DIR}" \
+    -output "${OUT_DIR}/${NAME}.xcframework"
+
+(cd "${OUT_DIR}" && zip -r "${NAME}.xcframework.zip" "${NAME}.xcframework")
+rm -rf "${OUT_DIR}/${NAME}.xcframework"
+cp "${BINDINGS_DIR}/swift/${NAME}.swift" "${OUT_DIR}/"
+'''
+
+[tasks.apple-build]
+dependencies = [
+  "apple-install-dependencies",
+  "apple-build-libraries",
+  "apple-build-bindings",
+  "apple-assemble-framework",
+]
+
+[tasks.android-install-dependencies]
+script = 'cargo install cross'
+dependencies = ["common-install-dependencies"]
+
+[tasks.android-build-libraries]
+script = '''
+cross build --target x86_64-linux-android --release
+cross build --target i686-linux-android --release
+cross build --target armv7-linux-androideabi --release
+cross build --target aarch64-linux-android --release
+'''
+
+[tasks.android-build-bindings]
+script = 'cargo run --bin uniffi-bindgen generate --language kotlin --library ./target/armeabi-v7a/release/libsimple_c2pa.so --out-dir ${BINDINGS_DIR}/kotlin'
+
+[tasks.android-assemble-aar-files]
+env = { NAME = "simple_c2pa", LIB_NAME = "lib${NAME}.so", OUT_DIR = "out/android", JNILIBS_DIR = "${OUT_DIR}/jniLibs", ANDROID_BINDINGS_DIR = "kotlin/info/guardianproject/simple_c2pa" }
+script = '''
+rm -rf "${OUT_DIR}"
+mkdir -p ${OUT_DIR}/${ANDROID_BINDINGS_DIR}
+cp ${BINDINGS_DIR}/${ANDROID_BINDINGS_DIR}/* ${OUT_DIR}/${ANDROID_BINDINGS_DIR}/
+echo "${JNILIBS_DIR}/x86_64"
+mkdir -p "${JNILIBS_DIR}/x86_64" "${JNILIBS_DIR}/x86" "${JNILIBS_DIR}/armeabi-v7a" "${JNILIBS_DIR}/arm64-v8a"
+cp "${TARGET_DIR}/x86_64-linux-android/${BUILD_MODE}/${LIB_NAME}" "${JNILIBS_DIR}/x86_64/${LIB_NAME}"
+cp "${TARGET_DIR}/i686-linux-android/${BUILD_MODE}/${LIB_NAME}" "${JNILIBS_DIR}/x86/${LIB_NAME}"
+cp "${TARGET_DIR}/armv7-linux-androideabi/${BUILD_MODE}/${LIB_NAME}" "${JNILIBS_DIR}/armeabi-v7a/${LIB_NAME}"
+cp "${TARGET_DIR}/aarch64-linux-android/${BUILD_MODE}/${LIB_NAME}" "${JNILIBS_DIR}/arm64-v8a/${LIB_NAME}"
+(cd "${OUT_DIR}" && zip -r "jniLibs.zip" "jniLibs")
+(cd "${OUT_DIR}" && zip -r "kotlin.zip" "kotlin")
+'''
+
+[tasks.android-build]
+dependencies = [
+  "android-install-dependencies",
+  "android-build-libraries",
+  "android-build-bindings",
+  "android-assemble-aar-files",
+]

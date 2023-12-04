@@ -1,0 +1,41 @@
+stages:
+  - build
+  - upload
+  - release
+
+build_apple:
+  tags:
+    - proofmode-macos
+  stage: build
+  script:
+    - cargo make apple-build
+  artifacts:
+    paths:
+      - ./out/apple/
+
+upload_apple:
+  stage: upload
+  image: curlimages/curl:latest
+  script:
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./out/apple/SimpleC2PA.swift "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/apple-v0.${CI_PIPELINE_IID}/SimpleC2PA.swift"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./out/apple/SimpleC2PA.xcframework.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/apple-v0.${CI_PIPELINE_IID}/SimpleC2PA.xcframework.zip"'
+
+release_apple:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - echo "running release_apple for $TAG"
+  release:
+    tag_name: "apple-v0.$CI_PIPELINE_IID"
+    description: "apple-v0.$CI_PIPELINE_IID"
+    ref: "$CI_COMMIT_SHA"
+    assets:
+      links:
+        - name: "SimpleC2PA.swift"
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/apple-v0.${CI_PIPELINE_IID}/SimpleC2PA.swift"
+        - name: "SimpleC2PA.xcframework.zip"
+          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/apple-v0.${CI_PIPELINE_IID}/SimpleC2PA.xcframework.zip"
