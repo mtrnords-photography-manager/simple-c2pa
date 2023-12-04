@@ -1,237 +1,88 @@
-use anyhow::Result;
-use c2pa::{
-    assertions::{
-        c2pa_action, labels, Action, Actions, SchemaDotOrg, SchemaDotOrgPerson, SoftwareAgent,
-    },
-    create_signer, Ingredient, Manifest, SigningAlg,
-};
+use crate::certificates::{self, Certificate};
+use crate::common::{FileData, SimpleC2PAError};
+use c2pa::{create_signer, Ingredient, Manifest, SigningAlg};
 use log::debug;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::path::PathBuf;
+use std::result::Result;
+use std::sync::{Arc, Mutex};
 use std::vec;
+use tempfile::NamedTempFile;
 
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct ProofCheckJSON {
-    #[serde(alias = "fileType")]
-    file_type: String,
-    #[serde(alias = "relatedFiles")]
-    related_files: HashMap<String, serde_json::Value>,
-    integrity: HashMap<String, serde_json::Value>,
-    thumbnail: String,
+const APPLICATION_NAME: &str = "Simple-C2PA";
+const APPLICATION_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+#[derive(Debug, Clone, uniffi::Object)]
+pub struct ApplicationInfo {
+    pub name: String,
+    pub version: String,
+    pub icon_uri: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct ProofModeJSON {
-    #[serde(alias = "DeviceID")]
-    device_id: String,
-}
-
-enum ProofJSON {
-    ProofMode(ProofModeJSON),
-    ProofCheck(ProofCheckJSON),
-}
-
-impl ProofJSON {
-    pub fn to_json_value(&self) -> serde_json::Result<serde_json::Value> {
-        match self {
-            ProofJSON::ProofMode(data) => serde_json::to_value(data),
-            ProofJSON::ProofCheck(data) => serde_json::to_value(data),
-        }
+#[uniffi::export]
+impl ApplicationInfo {
+    #[uniffi::constructor]
+    pub fn new(name: String, version: String, icon_uri: Option<String>) -> Arc<Self> {
+        Arc::new(ApplicationInfo {
+            name,
+            version,
+            icon_uri,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct TrainingNotAllowedJSON {
-    r#use: String,
+impl Display for ApplicationInfo {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{}/{}", self.name, self.version)
+    }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-struct TrainingConstrainedJSON {
-    r#use: String,
-    r#constraint_info: String,
-}
-
-const GENERATOR: &str = concat!("ProofMode/", env!("CARGO_PKG_VERSION"));
-
-#[derive(Debug)]
+#[derive(Debug, uniffi::Object)]
 pub struct ContentCredentials {
-    certificate: String,
-    private_key: String,
-    socials: Option<Vec<String>>,
-    pgp_fingerprint: Option<String>,
-    allow_machine_learning: bool,
+    certificate: Arc<Certificate>,
+    file: Arc<FileData>,
+    application_info: Arc<ApplicationInfo>,
+    pub(crate) manifest: Mutex<Manifest>,
 }
 
+#[uniffi::export]
 impl ContentCredentials {
-    pub fn new(certificate: String, private_key: String) -> Self {
-        ContentCredentials {
-            certificate,
-            private_key,
-            socials: None,
-            pgp_fingerprint: None,
-            allow_machine_learning: false,
-        }
-    }
-
-    pub fn set_socials(&mut self, socials: Vec<String>) {
-        self.socials = Some(socials);
-    }
-
-    pub fn set_pgp_fingerprint(&mut self, pgp_fingerprint: String) {
-        self.pgp_fingerprint = Some(pgp_fingerprint);
-    }
-
-    pub fn set_allow_machine_learning(&mut self, allow_machine_learning: bool) {
-        self.allow_machine_learning = allow_machine_learning;
-    }
-
-    pub fn add_capture_assertion(
-        &self,
-        identity_uri: String,
-        identity_name: String,
-        identity_id: String,
-        input_path: String,
-        output_path: String,
-    ) {
-        println!("Capture");
-        let result = match self.add_assertion(
-            c2pa_action::CREATED,
-            &identity_uri,
-            &identity_name,
-            &identity_id,
-            input_path.to_string(),
-            output_path.to_string(),
+    #[uniffi::constructor]
+    pub fn new(
+        certificate: Arc<Certificate>,
+        file: Arc<FileData>,
+        application_info: Option<Arc<ApplicationInfo>>,
+    ) -> Arc<Self> {
+        let app_info = application_info.unwrap_or(ApplicationInfo::new(
+            APPLICATION_NAME.to_owned(),
+            APPLICATION_VERSION.to_owned(),
             None,
-        ) {
-            Ok(res) => format!("Output: {}", res),
-            Err(e) => format!("Error: {}", e),
-        };
-    }
-
-    pub fn add_import_assertion(
-        &self,
-        identity_uri: String,
-        identity_name: String,
-        identity_id: String,
-        input_path: String,
-        output_path: String,
-    ) {
-        println!("Import");
-        let result = match self.add_assertion(
-            c2pa_action::PLACED,
-            &identity_uri,
-            &identity_name,
-            &identity_id,
-            input_path.to_string(),
-            output_path.to_string(),
-            None,
-        ) {
-            Ok(res) => format!("Output: {}", res),
-            Err(e) => format!("Error: {}", e),
-        };
-    }
-
-    pub fn add_proof_assertion(&self, file_path: String, output_path: String, json: String) {
-        println!("Prove");
-        let parsed_json =
-            serde_json::from_str::<ProofModeJSON>(&json).expect("JSON was not well-formatted");
-        let result = match self.add_assertion(
-            "org.proofmode.proofmode_data_added",
-            "",
-            "",
-            "",
-            file_path,
-            output_path,
-            Some(ProofJSON::ProofMode(parsed_json)),
-        ) {
-            Ok(res) => format!("Output: {}", res),
-            Err(e) => format!("Error: {}", e),
-        };
-    }
-
-    pub fn add_check_assertion(&self, file_path: String, output_path: String, json: String) {
-        println!("Check");
-        let parsed_json =
-            serde_json::from_str::<ProofCheckJSON>(&json).expect("JSON was not well-formatted");
-        let result = match self.add_assertion(
-            "org.proofmode.proofcheck_data_added",
-            "https://proofcheck.gpfs.link",
-            "ProofCheck Service",
-            "ProofCheck",
-            file_path,
-            output_path,
-            Some(ProofJSON::ProofCheck(parsed_json)),
-        ) {
-            Ok(res) => format!("Output: {}", res),
-            Err(e) => format!("Error: {}", e),
-        };
-    }
-
-    fn add_assertion(
-        &self,
-        action: &str,
-        identity_uri: &str,
-        identity_name: &str,
-        identity_id: &str,
-        media_file_path: String,
-        output_file_path: String,
-        json: Option<ProofJSON>,
-    ) -> Result<String> {
-        debug!("loading c2pa ingredients from parent file");
-        let parent = Ingredient::from_file(&media_file_path)?;
-        let action = Action::new(action);
-        let agent = SoftwareAgent::String(GENERATOR.to_owned());
-        action.clone().set_software_agent(agent);
-
-        debug!("adding c2pa: person");
-        let original_person = SchemaDotOrgPerson::new()
-            .set_name(identity_name.to_owned())
-            .unwrap()
-            .set_identifier(identity_id.to_owned())
-            .unwrap()
-            .insert("@id".to_owned(), identity_uri.to_owned())
+        ));
+        let path = file.get_path().unwrap();
+        println!("{:?}", path);
+        let mut ingredient = Ingredient::from_file(path).unwrap();
+        ingredient
+            .set_thumbnail("image/jpeg", file.get_bytes().unwrap())
             .unwrap();
+        let claim_generator = app_info.to_string();
+        let mut manifest = Manifest::new(claim_generator);
+        manifest.set_parent(ingredient).unwrap();
 
-        debug!("adding c2pa: creativework");
-        let original = SchemaDotOrg::new("CreativeWork".to_owned())
-            .set_default_context()
-            .insert("author".to_owned(), vec![original_person.clone()])?;
-        let actions = Actions::new().add_action(action);
-        let mut manifest = Manifest::new(GENERATOR.to_owned());
-        manifest.set_parent(parent)?;
-        manifest.add_assertion(&actions)?;
-        manifest.add_labeled_assertion(labels::CREATIVE_WORK, &original)?;
+        Arc::new(ContentCredentials {
+            certificate,
+            file,
+            application_info: app_info,
+            manifest: Mutex::new(manifest),
+        })
+    }
 
-        if json.is_some() {
-            debug!("adding c2pa: proofmode json");
-            let json = json.unwrap().to_json_value().unwrap();
-            manifest.add_labeled_assertion("org.proofmode.proof", &json)?;
-        }
-
-        if !self.allow_machine_learning {
-            debug!("adding c2pa: training");
-            let training_not_allowed: TrainingNotAllowedJSON = TrainingNotAllowedJSON {
-                r#use: "notAllowed".to_owned(),
-            };
-
-            let training_constrained: TrainingConstrainedJSON =  TrainingConstrainedJSON {
-                r#use : "constrained".to_owned(),
-                r#constraint_info : "may only be mined for purposes of content verification or in coordination with creator and original intent and purposes".to_owned()
-            };
-            manifest.add_labeled_assertion("c2pa.ai_training", &training_not_allowed)?;
-            manifest.add_labeled_assertion("c2pa.ai_generative_training", &training_not_allowed)?;
-            manifest.add_labeled_assertion("c2pa.data_mining", &training_constrained)?;
-            manifest.add_labeled_assertion("c2pa.inference", &training_not_allowed)?;
-        }
-        let clean_cert = self.certificate.clone();
-        let signcert = clean_cert.as_bytes();
-
-        let clean_pkey = self.private_key.clone();
-        let pkey = clean_pkey.as_bytes();
+    fn sign_manifest_with_certificate(
+        &self,
+        certificate: Arc<Certificate>,
+        output_file: Arc<FileData>,
+    ) -> Result<(), SimpleC2PAError> {
+        let cert = certificate.certificate_data.get_bytes()?;
+        let pkey = certificate.private_key_data.get_bytes()?;
         let algorithms = vec![
             SigningAlg::Es256,
             SigningAlg::Es384,
@@ -241,16 +92,21 @@ impl ContentCredentials {
             SigningAlg::Ps512,
             SigningAlg::Ed25519,
         ];
-        debug!("adding c2pa: signing");
+        println!("adding c2pa: signing");
         for alg in algorithms {
             debug!("Trying algorithm {:?}... ", alg);
-            let signer = create_signer::from_keys(&signcert, &pkey, alg, None);
-            debug!("embedding manifest using signer");
+            let signer = create_signer::from_keys(&cert, &pkey, alg, None);
+            println!("embedding manifest using signer");
             match signer {
                 Ok(signer) => {
-                    match manifest.embed(&media_file_path, &output_file_path, signer.as_ref()) {
+                    let mut manifest = self.manifest.lock().unwrap();
+                    match manifest.embed(
+                        &self.file.get_path()?,
+                        &output_file.get_path()?,
+                        signer.as_ref(),
+                    ) {
                         Ok(_) => {
-                            debug!("Using provided certificate and private key");
+                            println!("Using provided certificate and private key");
                             break;
                         }
                         Err(err) => {
@@ -260,12 +116,56 @@ impl ContentCredentials {
                     }
                 }
                 Err(err) => {
-                    debug!("failed: {}\n", err);
+                    println!("failed: {}\n", err);
                     continue;
                 }
             };
         }
+        Ok(())
+    }
 
-        Ok("c2pa assert added".to_owned())
+    fn sign_manifest(
+        &self,
+        embed: bool,
+        output_path: Option<String>,
+    ) -> Result<Arc<FileData>, SimpleC2PAError> {
+        let temp_path = NamedTempFile::new()?.path().to_path_buf();
+        // let output_path = PathBuf::from(output_path.clone()) // .unwrap_or(temp_path);
+        let output_file = FileData::new(output_path.clone(), None, None);
+        if !embed {
+            let mut manifest = self.manifest.lock().unwrap();
+            manifest.set_sidecar_manifest();
+        }
+
+        self.sign_manifest_with_certificate(self.certificate.clone(), output_file.clone())?;
+        Ok(output_file)
+    }
+
+    pub fn embed_manifest(
+        &self,
+        output_path: Option<String>,
+    ) -> Result<Arc<FileData>, SimpleC2PAError> {
+        self.sign_manifest(true, output_path)
+    }
+
+    pub fn export_manifest(
+        &self,
+        output_path: Option<String>,
+    ) -> Result<Arc<FileData>, SimpleC2PAError> {
+        self.sign_manifest(false, output_path)
     }
 }
+
+#[derive(Debug, Clone, uniffi::Enum)]
+pub enum Identity {
+    Certificate, //  { certificate: Arc<Certificate> },
+}
+
+/*
+impl Identity {
+    #[uniffi::constructor]
+    pub fn new(certificate: Arc<Certificate>) -> Arc<Self> {
+        Arc::new(Identity::Certificate { certificate })
+    }
+}
+*/
