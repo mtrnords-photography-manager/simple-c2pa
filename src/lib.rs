@@ -10,7 +10,7 @@ pub use certificates::{
 };
 
 mod content_credentials;
-pub use content_credentials::{ApplicationInfo, ContentCredentials, Identity};
+pub use content_credentials::{ApplicationInfo, ContentCredentials};
 
 mod assertions;
 pub use assertions::{AIDataMiningUsage, CustomAITrainingOptions, ExifData};

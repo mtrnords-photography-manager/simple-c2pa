@@ -1,9 +1,8 @@
-use crate::certificates::{self, Certificate};
+use crate::certificates::Certificate;
 use crate::common::{FileData, SimpleC2PAError};
 use c2pa::{create_signer, Ingredient, Manifest, SigningAlg};
 use log::debug;
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use std::path::PathBuf;
 use std::result::Result;
 use std::sync::{Arc, Mutex};
 use std::vec;
@@ -92,7 +91,6 @@ impl ContentCredentials {
             SigningAlg::Ps512,
             SigningAlg::Ed25519,
         ];
-        println!("adding c2pa: signing");
         for alg in algorithms {
             debug!("Trying algorithm {:?}... ", alg);
             let signer = create_signer::from_keys(&cert, &pkey, alg, None);
@@ -155,17 +153,3 @@ impl ContentCredentials {
         self.sign_manifest(false, output_path)
     }
 }
-
-#[derive(Debug, Clone, uniffi::Enum)]
-pub enum Identity {
-    Certificate, //  { certificate: Arc<Certificate> },
-}
-
-/*
-impl Identity {
-    #[uniffi::constructor]
-    pub fn new(certificate: Arc<Certificate>) -> Arc<Self> {
-        Arc::new(Identity::Certificate { certificate })
-    }
-}
-*/

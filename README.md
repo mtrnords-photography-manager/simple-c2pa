@@ -4,51 +4,34 @@ This project builds upon the C2PA Rust library (https://github.com/contentauth/c
 
 ## DISCLAIMER
 
-This is still very much "alpha" work, and is it the process of being reorganized a bit on the interface front. However, it does function as expected, and can be easily used on Android through published Maven dependencies.
+This is still very much "alpha" work, and is it the process of being reorganized a bit on the interface front. However, it does function as expected, and can be used on Android via Maven (https://gitlab.com/guardianproject/proofmode/simple-c2pa-android/-/packages) and iOS via Swift Package Manager (https://gitlab.com/guardianproject/proofmode/simple-c2pa-ios).
 
 ## How To Use This
 
-See the src/lib.rs file for the current set of capabilities we have implemented. You can also see the src/android.rs for the JNI interface that can be called from Java/Kotlin on Android, and the src/apple.rs for iOS devices.
+See the src/lib.rs file for the current set of capabilities we have implemented.
 
-You can build the native libraries yourself using the Makefile and 'make android' or 'make ios' commands.
+### Build Android
 
-## Sample Code for Android
+You can build the native libraries yourself using the [cargo-make crate][1] with `cargo make android-build` and `cargo make apple-build`. In order to build the Android libraries, you will need Docker installed and the [latest version of cross][2]: `cargo install cross --git https://github.com/cross-rs/cross`. In order to build for iOS, you will need a Mac with Xcode installed.
 
-There is also a sample project for Android, with the C2paSampleActivity.kt sample activity. Below is an example set of calls:
+## Installing the Android Library
 
-	var certPath = File(filesDir,"cr.cert")
-        var certKey = File(filesDir, "cr.key")
-
-        var imagePath = File(getExternalFilesDir(null), "test.jpg")
-        var identity = "joe@https://instagram.com/joeschmo"; //string needs name@uri/identity format
-        var fingerprint = "12345678"
-        var outputPath = File(getExternalFilesDir(null), "test-c2pa" + Date().time + ".jpg")
-
-        if (!certPath.exists() || !certKey.exists())
-            C2paJNI.generateCredentials(certPath.absolutePath, certKey.absolutePath, fingerprint)
-
-        var isDirectCapture = false;
-        var allowMachineLearning = true;
-
-        C2paJNI.addAssert(certPath.absolutePath, certKey.absolutePath, imagePath.absolutePath, identity, fingerprint, isDirectCapture, allowMachineLearning, outputPath.absolutePath)
-
-
-## Android Library
-
-First, add our GPMaven repository to your project
+First, add our Maven repository to your project
 
 	allprojects {
-    		repositories {
-		...
-        	maven { url "https://raw.githubusercontent.com/guardianproject/gpmaven/master" }
-       		...
-    		}
+		repositories {
+	    	...
+			maven {
+				url = uri("https://gitlab.com/api/v4/projects/52243488/packages/maven")
+			}
+	       	...
+	    }
 	}
 
-Then, import the proofmode-c2pa library, currently at version 0.3
+Then, import the simple-c2pa library, currently at version 0.0.5.
 
-	implementation("org.proofmode:proofmode-c2pa:0.3")
+`implementation("info.guardianproject:simple-c2pa:0.0.5")`
 
-## iOS Library
+## Installing the iOS Library
 
-Information on how to build and use the library for iOS will be here shortly.
+Add the SimpleC2PA Swift package in Xcode with the repository URL https://gitlab.com/guardianproject/proofmode/simple-c2pa-ios).
