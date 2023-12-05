@@ -12,7 +12,7 @@ See the src/lib.rs file for the current set of capabilities we have implemented.
 
 ### Build Android
 
-You can build the native libraries yourself using the [cargo-make crate][1] with `cargo make android-build` and `cargo make apple-build`. In order to build the Android libraries, you will need Docker installed and the [latest version of cross][2]: `cargo install cross --git https://github.com/cross-rs/cross`. In order to build for iOS, you will need a Mac with Xcode installed.
+You can build the native libraries yourself using the [cargo-make crate](https://github.com/sagiegurari/cargo-make) with `cargo make android-build` and `cargo make apple-build`. In order to build the Android libraries, you will need Docker installed and the latest version of [the cross crate](https://github.com/cross-rs/cross). In order to build for iOS, you will need a Mac with Xcode installed.
 
 ## Installing the Android Library
 
