@@ -20,7 +20,7 @@ let package = Package(
         ),
         .target(
             name: "SimpleC2PA",
-             path: "apple/src"
+             path: "apple/src",
             dependencies: [ "SimpleC2PAFramework" ]             
         ),
     ]
