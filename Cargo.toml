@@ -1,6 +1,6 @@
 [package]
 name = "simple-c2pa"
-version = "0.8.0"
+version = "0.0.6"
 edition = "2021"
 
 [dependencies]

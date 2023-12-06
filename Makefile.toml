@@ -91,8 +91,6 @@ cp "${TARGET_DIR}/x86_64-linux-android/${BUILD_MODE}/${LIB_NAME}" "${JNILIBS_DIR
 cp "${TARGET_DIR}/i686-linux-android/${BUILD_MODE}/${LIB_NAME}" "${JNILIBS_DIR}/x86/${LIB_NAME}"
 cp "${TARGET_DIR}/armv7-linux-androideabi/${BUILD_MODE}/${LIB_NAME}" "${JNILIBS_DIR}/armeabi-v7a/${LIB_NAME}"
 cp "${TARGET_DIR}/aarch64-linux-android/${BUILD_MODE}/${LIB_NAME}" "${JNILIBS_DIR}/arm64-v8a/${LIB_NAME}"
-(cd "${OUT_DIR}" && zip -r "jniLibs.zip" "jniLibs")
-(cd "${OUT_DIR}" && zip -r "kotlin.zip" "kotlin")
 '''
 
 [tasks.android-build]
@@ -102,5 +100,3 @@ dependencies = [
   "android-build-bindings",
   "android-assemble-aar-files",
 ]
-
-[tasks.create-release]
