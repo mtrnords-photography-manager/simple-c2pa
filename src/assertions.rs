@@ -3,9 +3,8 @@ use crate::content_credentials::ContentCredentials;
 use c2pa::assertions::{c2pa_action, labels, Action, Actions, Exif, SchemaDotOrg};
 use serde::{Deserialize, Serialize};
 use std::result::Result;
-use std::sync::Arc;
 
-#[derive(uniffi::Object)]
+#[derive(uniffi::Record)]
 pub struct ExifData {
     pub gps_version_id: Option<String>,
     pub latitude: Option<String>,
@@ -29,37 +28,6 @@ pub struct ExifData {
     pub lens_make: Option<String>,
     pub lens_model: Option<String>,
     pub lens_specification: Option<Vec<f64>>,
-}
-
-#[uniffi::export]
-impl ExifData {
-    #[uniffi::constructor]
-    pub fn new() -> Arc<Self> {
-        Arc::new(ExifData {
-            gps_version_id: None,
-            latitude: None,
-            longitude: None,
-            altitude_ref: None,
-            altitude: None,
-            timestamp: None,
-            speed_ref: None,
-            speed: None,
-            direction_ref: None,
-            direction: None,
-            destination_bearing_ref: None,
-            destination_bearing: None,
-            positioning_error: None,
-            exposure_time: None,
-            f_number: None,
-            color_space: None,
-            digital_zoom_ratio: None,
-            make: None,
-            model: None,
-            lens_make: None,
-            lens_model: None,
-            lens_specification: None,
-        })
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -195,7 +163,7 @@ impl ContentCredentials {
         Ok(())
     }
 
-    pub fn add_exif_assertion(&self, exif_data: Arc<ExifData>) -> Result<(), SimpleC2PAError> {
+    pub fn add_exif_assertion(&self, exif_data: ExifData) -> Result<(), SimpleC2PAError> {
         let mut exif = Exif::new();
         if let Some(gps_version_id) = exif_data.gps_version_id.clone() {
             exif = exif.insert("exif:GPSVersionID", gps_version_id)?;
@@ -309,3 +277,18 @@ impl ContentCredentials {
         Ok(())
     }
 }
+/*
+#[cfg(test)]
+pub mod tests {
+    #[test]
+    fn get_creative_work_assertion() {
+        let work = crate::assertions::get_creative_work_assertion(
+            "John Doe".to_owned(),
+            "johndoe".to_owned(),
+            "https://instagram.com".to_owned(),
+        )
+        .unwrap();
+        assert_eq!("X", "CreativeWork");
+    }
+}
+*/

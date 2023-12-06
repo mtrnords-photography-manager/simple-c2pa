@@ -74,7 +74,10 @@ cross build --target aarch64-linux-android --release
 '''
 
 [tasks.android-build-bindings]
-script = 'cargo run --bin uniffi-bindgen generate --language kotlin --library ./target/x86_64-linux-android/release/libsimple_c2pa.so --out-dir ${BINDINGS_DIR}/kotlin'
+script = '''
+cargo build --target x86_64-linux-android
+cargo run --bin uniffi-bindgen generate --language kotlin --library ./target/x86_64-linux-android/debug/libsimple_c2pa.so --out-dir ${BINDINGS_DIR}/kotlin
+'''
 
 [tasks.android-assemble-aar-files]
 env = { NAME = "simple_c2pa", LIB_NAME = "lib${NAME}.so", OUT_DIR = "out/android", JNILIBS_DIR = "${OUT_DIR}/jniLibs", ANDROID_BINDINGS_DIR = "kotlin/info/guardianproject/simple_c2pa" }

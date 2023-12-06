@@ -5,8 +5,8 @@ pub use common::FileData;
 
 mod certificates;
 pub use certificates::{
-    create_certificate, create_private_key, request_signed_certificate, CertificateOptions,
-    CertificateType,
+    create_certificate, create_content_credentials_certificate, create_private_key,
+    create_root_certificate, request_signed_certificate, CertificateOptions, CertificateType,
 };
 
 mod content_credentials;

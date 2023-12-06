@@ -136,9 +136,9 @@ impl CertificateOptions {
 
 #[derive(Clone, Debug, uniffi::Object)]
 pub struct Certificate {
-    pub certificate_data: Arc<FileData>,
-    pub private_key_data: Arc<FileData>,
-    pub parent_certificate: Option<Arc<Certificate>>,
+    certificate_data: Arc<FileData>,
+    private_key_data: Arc<FileData>,
+    parent_certificate: Option<Arc<Certificate>>,
 }
 
 #[uniffi::export]
@@ -154,6 +154,14 @@ impl Certificate {
             private_key_data,
             parent_certificate,
         })
+    }
+
+    pub fn get_certificate_bytes(&self) -> Result<Vec<u8>, SimpleC2PAError> {
+        return self.certificate_data.get_bytes();
+    }
+
+    pub fn get_private_key_bytes(&self) -> Result<Vec<u8>, SimpleC2PAError> {
+        return self.private_key_data.get_bytes();
     }
 }
 fn generate_serial_number() -> Result<Asn1Integer, SimpleC2PAError> {
@@ -257,6 +265,47 @@ pub fn create_certificate(
         options.parent_certificate.clone(),
     );
 
+    Ok(certificate)
+}
+
+#[uniffi::export]
+pub fn create_root_certificate(
+    organization: Option<String>,
+    validity_days: Option<u32>,
+) -> Result<Arc<Certificate>, SimpleC2PAError> {
+    let key = create_private_key().unwrap();
+    let options = CertificateOptions::new(
+        key.clone(),
+        CertificateType::OfflineRoot {
+            organization,
+            validity_days,
+        },
+        None,
+        None,
+        None,
+    );
+    let certificate = create_certificate(options)?;
+    Ok(certificate)
+}
+
+#[uniffi::export]
+pub fn create_content_credentials_certificate(
+    root_certificate: Option<Arc<Certificate>>,
+    organization: Option<String>,
+    validity_days: Option<u32>,
+) -> Result<Arc<Certificate>, SimpleC2PAError> {
+    let key = create_private_key().unwrap();
+    let options = CertificateOptions::new(
+        key.clone(),
+        CertificateType::ContentCredentials {
+            organization,
+            validity_days,
+        },
+        root_certificate,
+        None,
+        None,
+    );
+    let certificate = create_certificate(options)?;
     Ok(certificate)
 }
 

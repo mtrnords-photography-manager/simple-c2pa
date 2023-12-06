@@ -80,8 +80,8 @@ impl ContentCredentials {
         certificate: Arc<Certificate>,
         output_file: Arc<FileData>,
     ) -> Result<(), SimpleC2PAError> {
-        let cert = certificate.certificate_data.get_bytes()?;
-        let pkey = certificate.private_key_data.get_bytes()?;
+        let cert = certificate.get_certificate_bytes()?;
+        let pkey = certificate.get_private_key_bytes()?;
         let algorithms = vec![
             SigningAlg::Es256,
             SigningAlg::Es384,
