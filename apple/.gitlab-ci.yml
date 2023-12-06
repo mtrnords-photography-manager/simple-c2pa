@@ -23,7 +23,7 @@ upload_apple:
   stage: upload
   image: curlimages/curl:latest
   script:
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./out/apple/SimpleC2PA.swift "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/{CI_COMMIT_TAG}/SimpleC2PA.swift"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./out/apple/SimpleC2PA.swift "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/${CI_COMMIT_TAG}/SimpleC2PA.swift"'
     - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./out/apple/SimpleC2PA.xcframework.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/${CI_COMMIT_TAG}/SimpleC2PA.xcframework.zip"'
 
 publish_apple:
@@ -38,7 +38,7 @@ publish_apple:
     - set-url --push origin "https://${GITLAB_ACCESS_USERNAME}:${GITLAB_ACCESS_TOKEN}@gitlab.com/guardianproject/proofmode/simple-c2pa.git"
   script:
     - cp out/apple/SimpleC2PA.swift apple/src/SimpleC2PA/
-    - FRAMEWORK_URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/apple-v0.${CI_PIPELINE_IID}/SimpleC2PA.xcframework.zip"
+    - FRAMEWORK_URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/${CI_COMMIT_TAG}/SimpleC2PA.xcframework.zip"
     - echo "Calculating checksum..."
     - CHECKSUM=$(shasum -a 256 ./out/apple/SimpleC2PA.xcframework.zip | awk '{print $1}')
     - echo "Updating Package.swift..."
