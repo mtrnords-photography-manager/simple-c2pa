@@ -17,22 +17,12 @@ build_android:
     paths:
       - ./out/android/
 
-upload_android:
-  only:
-    - tags
-  stage: upload
-  image: curlimages/curl:latest
-  script:
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./out/android/kotlin.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/android-v0.${CI_PIPELINE_IID}/kotlin.zip"'
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./out/android/jniLibs.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/android-v0.${CI_PIPELINE_IID}/jniLibs.zip"'
-
 publish_android:
   image: mobiledevops/android-sdk-image:33.0.2
   only:
-    - develop
     - tags
   stage: release
   script:
     - cp -r out/android/* android/project/simple_c2pa/src/main/
     - ls -al android/project/simple_c2pa/src/main/
-    - cd android/project && ./gradlew clean assembleRelease
+    - cd android/project && ./gradlew clean assembleRelease && ./gradlew publish

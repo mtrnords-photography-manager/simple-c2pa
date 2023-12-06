@@ -36,7 +36,6 @@ android {
 }
 
 dependencies {
-
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.8.0")
@@ -52,15 +51,15 @@ publishing {
       artifact("$buildDir/outputs/aar/${project.name}-release.aar")
       groupId = "info.guardianproject"
       artifactId = "simple_c2pa"
-      version = "0.0.5"
+      version = System.getenv("CI_COMMIT_TAG") as String? 
     }
   }
   repositories {
     maven {
-      url = uri("https://gitlab.com/api/v4/projects/52243488/packages/maven")
+      url = uri("https://gitlab.com/api/v4/projects/51891540/packages/maven")
       credentials {
-        this.username =  findProperty("MAVEN_USERNAME") as String?
-        this.password =  findProperty("MAVEN_PASSWORD") as String?
+        this.username =  System.getenv("MAVEN_USERNAME") as String?
+        this.password =  System.getenv("MAVEN_PASSWORD") as String?
       }
     }
   }
