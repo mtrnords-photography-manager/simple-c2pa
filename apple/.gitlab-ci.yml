@@ -35,7 +35,7 @@ publish_apple:
     - apt-get update && apt-get install -y git perl
     - git config --global user.email "${GITLAB_USER_EMAIL}"
     - git config --global user.name "${GITLAB_USER_NAME}"
-    - set-url --push origin "https://${GITLAB_ACCESS_USERNAME}:${GITLAB_ACCESS_TOKEN}@gitlab.com/guardianproject/proofmode/simple-c2pa.git"
+    - git remote set-url --push origin "https://${GITLAB_ACCESS_USERNAME}:${GITLAB_ACCESS_TOKEN}@gitlab.com/guardianproject/proofmode/simple-c2pa.git"
   script:
     - cp out/apple/SimpleC2PA.swift apple/src/SimpleC2PA/
     - FRAMEWORK_URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/${CI_COMMIT_TAG}/SimpleC2PA.xcframework.zip"
