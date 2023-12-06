@@ -20,22 +20,25 @@ upload_apple:
     - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./out/apple/SimpleC2PA.swift "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/apple-v0.${CI_PIPELINE_IID}/SimpleC2PA.swift"'
     - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./out/apple/SimpleC2PA.xcframework.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/apple-v0.${CI_PIPELINE_IID}/SimpleC2PA.xcframework.zip"'
 
-release_apple:
+publish_apple:
   stage: release
-  image: registry.gitlab.com/gitlab-org/release-cli:latest
-  rules:
-    - if: $CI_COMMIT_TAG
-      when: never
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  image: debian:bullseye
+  before_script:
+    - apt-get update && apt-get install -y git perl
+    - git config --global user.email "${GITLAB_USER_EMAIL}"
+    - git config --global user.name "${GITLAB_USER_NAME}"
   script:
-    - echo "running release_apple for $TAG"
-  release:
-    tag_name: "apple-v0.$CI_PIPELINE_IID"
-    description: "apple-v0.$CI_PIPELINE_IID"
-    ref: "$CI_COMMIT_SHA"
-    assets:
-      links:
-        - name: "SimpleC2PA.swift"
-          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/apple-v0.${CI_PIPELINE_IID}/SimpleC2PA.swift"
-        - name: "SimpleC2PA.xcframework.zip"
-          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/apple-v0.${CI_PIPELINE_IID}/SimpleC2PA.xcframework.zip"
+    - cp out/apple/SimpleC2PA.swift apple/src/SimpleC2PA/
+    - FRAMEWORK_URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/apple-v0.${CI_PIPELINE_IID}/SimpleC2PA.xcframework.zip"
+    - echo "Calculating checksum..."
+    - CHECKSUM=$(shasum -a 256 ./out/apple/SimpleC2PA.xcframework.zip | awk '{print $1}')
+    - echo "Updating Package.swift..."
+    - echo $FRAMEWORK_URL
+    - echo $CHECKSUM
+    - 'sed -i "s|url: \\".*\\"|url: \\"${FRAMEWORK_URL}\\"|g" Package.swift'
+    - 'sed -i "s|checksum: \\".*\\"|checksum: \\"${CHECKSUM}\\"|g" Package.swift'
+    - cat Package.swift
+    - git add Package.swift
+    - git add apple/src/SimpleC2PA/SimpleC2PA.swift
+    - git commit -m "Update Swift files"
+    - git push origin HEAD:$CI_COMMIT_REF_NAME

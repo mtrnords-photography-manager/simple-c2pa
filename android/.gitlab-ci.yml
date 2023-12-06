@@ -4,6 +4,10 @@ stages:
   - release
 
 build_android:
+  only:
+    - main
+    - develop
+    - tags
   tags:
     - proofmode-debian
   stage: build
@@ -14,28 +18,21 @@ build_android:
       - ./out/android/
 
 upload_android:
+  only:
+    - tags
   stage: upload
   image: curlimages/curl:latest
   script:
     - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./out/android/kotlin.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/android-v0.${CI_PIPELINE_IID}/kotlin.zip"'
     - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./out/android/jniLibs.zip "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/android-v0.${CI_PIPELINE_IID}/jniLibs.zip"'
 
-release_android:
+publish_android:
+  image: mobiledevops/android-sdk-image:33.0.2
+  only:
+    - develop
+    - tags
   stage: release
-  image: registry.gitlab.com/gitlab-org/release-cli:latest
-  rules:
-    - if: $CI_COMMIT_TAG
-      when: never
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
-    - echo "running release_android for $TAG"
-  release:
-    tag_name: "android-v0.$CI_PIPELINE_IID"
-    description: "android-v0.$CI_PIPELINE_IID"
-    ref: "$CI_COMMIT_SHA"
-    assets:
-      links:
-        - name: "kotlin.zip"
-          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/android-v0.${CI_PIPELINE_IID}/kotlin.zip"
-        - name: "jniLibs.zip"
-          url: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/simple_c2pa/android-v0.${CI_PIPELINE_IID}/jniLibs.zip"
+    - cp -r out/android/* android/project/simple_c2pa/src/main/
+    - ls -al android/project/simple_c2pa/src/main/
+    - cd android/project && ./gradlew clean assembleRelease

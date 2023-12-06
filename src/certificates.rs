@@ -84,6 +84,26 @@ impl CertificateType {
         }
     }
 
+    fn to_organization(&self) -> String {
+        match self {
+            CertificateType::OnlineRoot { organization, .. } => {
+                organization.clone().unwrap_or(DEFAULT_ORGANIZATION.to_owned())
+            }
+            CertificateType::OnlineIntermediate { organization, .. } => {
+                organization.clone().unwrap_or(DEFAULT_ORGANIZATION.to_owned())
+            }
+            CertificateType::OfflineRoot { organization, .. } => {
+                organization.clone().unwrap_or(DEFAULT_ORGANIZATION.to_owned())
+            }
+            CertificateType::OfflineIntermediate { organization, .. } => {
+                organization.clone().unwrap_or(DEFAULT_ORGANIZATION.to_owned())
+            }
+            CertificateType::ContentCredentials { organization, .. } => {
+                organization.clone().unwrap_or(DEFAULT_ORGANIZATION.to_owned())
+            }
+        }
+    }
+    
     fn to_common_name(&self) -> String {
         match self {
             CertificateType::OnlineRoot { organization, .. } => {
@@ -177,7 +197,7 @@ fn generate_serial_number() -> Result<Asn1Integer, SimpleC2PAError> {
 fn create_name(options: Arc<CertificateOptions>) -> Result<X509Name, SimpleC2PAError> {
     let mut name_builder = X509NameBuilder::new()?;
     name_builder.append_entry_by_text("CN", &options.certificate_type.to_common_name())?;
-    name_builder.append_entry_by_text("O", DEFAULT_ORGANIZATION)?;
+    name_builder.append_entry_by_text("O", &options.certificate_type.to_organization())?;
 
     if let Some(email_address) = options.email_address.clone() {
         name_builder.append_entry_by_text("emailAddress", &email_address)?;
