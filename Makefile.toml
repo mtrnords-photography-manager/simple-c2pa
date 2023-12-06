@@ -75,7 +75,7 @@ cross build --target aarch64-linux-android --release
 
 [tasks.android-build-bindings]
 script = '''
-cargo build --target x86_64-linux-android
+cross build --target x86_64-linux-android
 cargo run --bin uniffi-bindgen generate --language kotlin --library ./target/x86_64-linux-android/debug/libsimple_c2pa.so --out-dir ${BINDINGS_DIR}/kotlin
 '''
 
@@ -102,3 +102,5 @@ dependencies = [
   "android-build-bindings",
   "android-assemble-aar-files",
 ]
+
+[tasks.create-release]

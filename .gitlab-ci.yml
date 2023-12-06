@@ -4,9 +4,9 @@ stages:
 trigger_apple:
   stage: triggers
   trigger:
-    include: ".gitlab-ci.apple.yml"
+    include: "apple/.gitlab-ci.yml"
 
 trigger_android:
   stage: triggers
   trigger:
-    include: ".gitlab-ci.android.yml"
+    include: "android/.gitlab-ci.yml"
