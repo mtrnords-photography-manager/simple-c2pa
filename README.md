@@ -58,8 +58,8 @@ try! cc.embedManifest(outputPath: outputPath)
 
 ## Build Android library
 
-You can build the native libraries yourself using the [cargo-make crate](https://github.com/sagiegurari/cargo-make) with `cargo make android-build`. In order to build the Android libraries, you will need Docker installed and the latest version of [the cross crate](https://github.com/cross-rs/cross).
+Build the native Android library yourself using [cargo-make](https://github.com/sagiegurari/cargo-make) with the command `cargo make android-build`. You will also need Docker installed and the latest version of [cross](https://github.com/cross-rs/cross).
 
 ## Build Apple library
 
-You can build the native libraries yourself using the [cargo-make crate](https://github.com/sagiegurari/cargo-make) with `cargo make apple-build` and `cargo make apple-build`. In order to build for Apple platforms, you will need a Mac with Xcode installed.
+Build the native Apple library yourself using [cargo-make](https://github.com/sagiegurari/cargo-make) with the command `cargo make apple-build`. You will need to run the command on a Mac with Xcode installed.
