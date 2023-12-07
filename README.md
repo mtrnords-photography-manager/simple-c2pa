@@ -4,34 +4,62 @@ This project builds upon the C2PA Rust library (https://github.com/contentauth/c
 
 ## DISCLAIMER
 
-This is still very much "alpha" work, and is it the process of being reorganized a bit on the interface front. However, it does function as expected, and can be used on Android via Maven (https://gitlab.com/guardianproject/proofmode/simple-c2pa-android/-/packages) and iOS via Swift Package Manager (https://gitlab.com/guardianproject/proofmode/simple-c2pa-ios).
+This is still very much "alpha" work, and is it the process of being reorganized a bit on the interface front. However, it does function as expected, and can be used on Android via Maven (https://gitlab.com/guardianproject/proofmode/simple-c2pa/-/packages) and iOS via Swift Package Manager.
 
 ## How To Use This
 
-See the src/lib.rs file for the current set of capabilities we have implemented.
-
-### Build Android
-
-You can build the native libraries yourself using the [cargo-make crate](https://github.com/sagiegurari/cargo-make) with `cargo make android-build` and `cargo make apple-build`. In order to build the Android libraries, you will need Docker installed and the latest version of [the cross crate](https://github.com/cross-rs/cross). In order to build for iOS, you will need a Mac with Xcode installed.
+See the tests/examples.rs file for the current set of capabilities we have implemented.
 
 ## Installing the Android Library
 
 First, add our Maven repository to your project
 
-	allprojects {
-		repositories {
-	    	...
-			maven {
-				url = uri("https://gitlab.com/api/v4/projects/52243488/packages/maven")
-			}
-	       	...
-	    }
-	}
+```
+    allprojects {
+    	repositories {
+        	...
+    		maven {
+    			url = uri("https://gitlab.com/api/v4/projects/51891540/packages/maven")
+    		}
+           	...
+        }
+    }
+```
 
-Then, import the simple-c2pa library, currently at version 0.0.5.
+Then, import the simple-c2pa library, currently at version 0.0.13.
 
-`implementation("info.guardianproject:simple-c2pa:0.0.5")`
+`implementation("info.guardianproject:simple-c2pa:0.0.13")`
+
+## Sample Kotlin code
+
+```
+val rootCert = createRootCertificate(null, null)
+val contentCert = createContentCredentialsCertificate(rootCert, null, null)
+val fileData = FileData(imagePath, null, fileName)
+val cc = ContentCredentials(contentCert, fileData, null)
+cc.addCreatedAssertion()
+cc.embedManifest(outputPath)
+```
 
 ## Installing the iOS Library
 
-Add the SimpleC2PA Swift package in Xcode with the repository URL https://gitlab.com/guardianproject/proofmode/simple-c2pa-ios).
+Add the SimpleC2PA Swift package in Xcode with the repository URL https://gitlab.com/guardianproject/proofmode/simple-c2pa. The current version is 0.0.13.
+
+## Sample Swift code
+
+```
+let rootCert = try! createRootCertificate(organization: nil, validityDays: nil);
+let contentCert = try! createContentCredentialsCertificate(rootCertificate: rootCert, organization: nil, validityDays: nil)
+let fileData = FileData(path: imagePath, bytes: nil, fileName: filename)
+let cc = ContentCredentials(certificate: contentCert, file: fileData, applicationInfo: nil)
+try! cc.addCreatedAssertion()
+try! cc.embedManifest(outputPath: outputPath)
+```
+
+## Build Android library
+
+You can build the native libraries yourself using the [cargo-make crate](https://github.com/sagiegurari/cargo-make) with `cargo make android-build`. In order to build the Android libraries, you will need Docker installed and the latest version of [the cross crate](https://github.com/cross-rs/cross).
+
+## Build Apple library
+
+You can build the native libraries yourself using the [cargo-make crate](https://github.com/sagiegurari/cargo-make) with `cargo make apple-build` and `cargo make apple-build`. In order to build for Apple platforms, you will need a Mac with Xcode installed.
