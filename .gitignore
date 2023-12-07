@@ -8,3 +8,4 @@ cache/
 bindings/
 jniLibs/
 ._*
+.build/

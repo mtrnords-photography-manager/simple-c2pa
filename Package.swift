@@ -21,8 +21,8 @@ let package = Package(
         ),
         .target(
             name: "SimpleC2PA",
-             path: "apple/src",
-            dependencies: [ "SimpleC2PAFramework" ]             
+	     dependencies: [ "SimpleC2PAFramework" ],
+             path: "apple/src"
         ),
     ]
 )
