@@ -38,9 +38,12 @@ pub mod tests {
         let root_path = "outputs/c2pa-root-certificate.crt";
         fs::write(root_path, root_bytes).expect("Can't write file");
 
-        let content_credentials_certificate =
-            create_content_credentials_certificate(Some(root_certificate.clone()), Some(organization.clone()), None)
-                .unwrap();
+        let content_credentials_certificate = create_content_credentials_certificate(
+            Some(root_certificate.clone()),
+            Some(organization.clone()),
+            None,
+        )
+        .unwrap();
         let content_bytes = content_credentials_certificate
             .get_certificate_bytes()
             .unwrap();

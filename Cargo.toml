@@ -6,13 +6,12 @@ edition = "2021"
 [dependencies]
 c2pa = { version = "0.32.1", features = ["file_io", "add_thumbnails"], path = "/run/media/marcel/1ac60e61-e5e2-4157-9a7a-830801a3fb0b/projects/c2pa-rs/sdk" }
 openssl = "0.10.48"
-log = "0.4.20"
 ring = "0.17.7"
 serde = "1.0.195"
 serde_json = "1.0.111"
 tempfile = "3.9.0"
 thiserror = "1.0.56"
-uniffi = { version = "0.25.3", features = ["build", "cli"] }
+tracing = "0.1.40"
 
 [profile.release]
 strip = true
@@ -23,8 +22,3 @@ panic = "abort"
 
 [lib]
 name = "simple_c2pa"
-crate-type = ["lib", "staticlib", "cdylib"]
-
-[[bin]]
-name = "uniffi-bindgen"
-path = "src/bin/uniffi-bindgen.rs"

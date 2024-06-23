@@ -1,26 +1,27 @@
-use crate::certificates::Certificate;
-use crate::common::{FileData, SimpleC2PAError};
-use c2pa::{create_signer, Ingredient, Manifest, SigningAlg};
-use log::debug;
 use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::path::PathBuf;
 use std::result::Result;
 use std::sync::{Arc, Mutex};
 use std::vec;
-use tempfile::NamedTempFile;
+
+use c2pa::{create_signer, Ingredient, Manifest, SigningAlg};
+use tracing::{debug, info};
+use tracing::error;
+
+use crate::certificates::Certificate;
+use crate::common::{FileData, SimpleC2PAError};
 
 const APPLICATION_NAME: &str = "Simple-C2PA";
 const APPLICATION_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(Debug, Clone, uniffi::Object)]
+#[derive(Debug, Clone)]
 pub struct ApplicationInfo {
     pub name: String,
     pub version: String,
     pub icon_uri: Option<String>,
 }
 
-#[uniffi::export]
 impl ApplicationInfo {
-    #[uniffi::constructor]
     pub fn new(name: String, version: String, icon_uri: Option<String>) -> Arc<Self> {
         Arc::new(ApplicationInfo {
             name,
@@ -36,17 +37,16 @@ impl Display for ApplicationInfo {
     }
 }
 
-#[derive(Debug, uniffi::Object)]
+#[derive(Debug)]
 pub struct ContentCredentials {
     certificate: Arc<Certificate>,
     file: Arc<FileData>,
+    #[allow(dead_code)]
     application_info: Arc<ApplicationInfo>,
     pub(crate) manifest: Mutex<Manifest>,
 }
 
-#[uniffi::export]
 impl ContentCredentials {
-    #[uniffi::constructor]
     pub fn new(
         certificate: Arc<Certificate>,
         file: Arc<FileData>,
@@ -58,11 +58,11 @@ impl ContentCredentials {
             None,
         ));
         let path = file.get_path().unwrap();
-        println!("{:?}", path);
-        let mut ingredient = Ingredient::from_file(path).unwrap();
-        ingredient
-            .set_thumbnail("image/jpeg", file.get_bytes().unwrap())
-            .unwrap();
+        let ingredient = Ingredient::from_file(path).unwrap();
+        // TODO: We shouldnt load it into bytes here
+        // ingredient
+        //     .set_thumbnail("image/jpeg", file.get_bytes().unwrap())
+        //     .unwrap();
         let claim_generator = app_info.to_string();
         let mut manifest = Manifest::new(claim_generator);
         manifest.set_parent(ingredient).unwrap();
@@ -77,8 +77,8 @@ impl ContentCredentials {
 
     fn sign_manifest_with_certificate(
         &self,
-        certificate: Arc<Certificate>,
-        output_file: Arc<FileData>,
+        certificate: &Arc<Certificate>,
+        output_file: &Arc<FileData>,
     ) -> Result<(), SimpleC2PAError> {
         let cert = certificate.get_certificate_bytes()?;
         let pkey = certificate.get_private_key_bytes()?;
@@ -92,9 +92,9 @@ impl ContentCredentials {
             SigningAlg::Ed25519,
         ];
         for alg in algorithms {
-            debug!("Trying algorithm {:?}... ", alg);
+            info!("Trying algorithm {:?}... ", alg);
             let signer = create_signer::from_keys(&cert, &pkey, alg, None);
-            println!("embedding manifest using signer");
+            info!("embedding manifest using signer");
             match signer {
                 Ok(signer) => {
                     let mut manifest = self.manifest.lock().unwrap();
@@ -104,17 +104,17 @@ impl ContentCredentials {
                         signer.as_ref(),
                     ) {
                         Ok(_) => {
-                            println!("Using provided certificate and private key");
+                            debug!("Using provided certificate and private key");
                             break;
                         }
                         Err(err) => {
-                            debug!("failed: {}\n", err);
+                            error!("failed: {}\n", err);
                             continue;
                         }
                     }
                 }
                 Err(err) => {
-                    println!("failed: {}\n", err);
+                    error!("failed: {}\n", err);
                     continue;
                 }
             };
@@ -125,30 +125,28 @@ impl ContentCredentials {
     fn sign_manifest(
         &self,
         embed: bool,
-        output_path: Option<String>,
+        output_path: Option<PathBuf>,
     ) -> Result<Arc<FileData>, SimpleC2PAError> {
-        let temp_path = NamedTempFile::new()?.path().to_path_buf();
-        // let output_path = PathBuf::from(output_path.clone()) // .unwrap_or(temp_path);
-        let output_file = FileData::new(output_path.clone(), None, None);
+        let output_file = FileData::new(output_path, None, None);
         if !embed {
             let mut manifest = self.manifest.lock().unwrap();
             manifest.set_sidecar_manifest();
         }
 
-        self.sign_manifest_with_certificate(self.certificate.clone(), output_file.clone())?;
+        self.sign_manifest_with_certificate(&self.certificate, &output_file)?;
         Ok(output_file)
     }
 
     pub fn embed_manifest(
         &self,
-        output_path: Option<String>,
+        output_path: Option<PathBuf>,
     ) -> Result<Arc<FileData>, SimpleC2PAError> {
         self.sign_manifest(true, output_path)
     }
 
     pub fn export_manifest(
         &self,
-        output_path: Option<String>,
+        output_path: Option<PathBuf>,
     ) -> Result<Arc<FileData>, SimpleC2PAError> {
         self.sign_manifest(false, output_path)
     }

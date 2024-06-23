@@ -1,4 +1,6 @@
-use crate::common::{FileData, SimpleC2PAError};
+use std::result::Result;
+use std::sync::Arc;
+
 use openssl::asn1::Asn1Integer;
 use openssl::bn::BigNum;
 use openssl::ec::{EcGroup, EcKey};
@@ -10,10 +12,9 @@ use openssl::x509::extension::{
 };
 use openssl::x509::{X509Name, X509NameBuilder, X509};
 use ring::rand::SecureRandom;
-use std::result::Result;
-use std::sync::Arc;
 
-#[uniffi::export]
+use crate::common::{FileData, SimpleC2PAError};
+
 pub fn create_private_key() -> Result<Arc<FileData>, SimpleC2PAError> {
     let group = EcGroup::from_curve_name(Nid::X9_62_PRIME256V1)?;
     let ec_key = EcKey::generate(&group)?;
@@ -25,40 +26,36 @@ pub fn create_private_key() -> Result<Arc<FileData>, SimpleC2PAError> {
 
 const DEFAULT_ORGANIZATION: &str = "SimpleC2PA";
 
-#[derive(Debug, Clone, uniffi::Enum)]
-pub enum CertificateType {
+#[derive(Debug, Clone)]
+pub enum CertificateType<'a> {
     OnlineRoot {
-        organization: Option<String>,
+        organization: Option<&'a str>,
         validity_days: Option<u32>,
     },
     OnlineIntermediate {
-        organization: Option<String>,
+        organization: Option<&'a str>,
         validity_days: Option<u32>,
     },
     OfflineRoot {
-        organization: Option<String>,
+        organization: Option<&'a str>,
         validity_days: Option<u32>,
     },
     OfflineIntermediate {
-        organization: Option<String>,
+        organization: Option<&'a str>,
         validity_days: Option<u32>,
     },
     ContentCredentials {
-        organization: Option<String>,
+        organization: Option<&'a str>,
         validity_days: Option<u32>,
     },
 }
 
-fn format_certificate_name(org: Option<String>, name: String) -> String {
-    format!(
-        "{} {}",
-        org.unwrap_or(DEFAULT_ORGANIZATION.to_owned()),
-        name
-    )
+fn format_certificate_name(org: Option<&str>, name: &str) -> String {
+    format!("{} {}", org.unwrap_or(DEFAULT_ORGANIZATION), name)
 }
 
-impl CertificateType {
-    fn is_ca(&self) -> bool {
+impl CertificateType<'_> {
+    const fn is_ca(&self) -> bool {
         match self {
             CertificateType::OnlineRoot { .. } => true,
             CertificateType::OnlineIntermediate { .. } => true,
@@ -84,66 +81,65 @@ impl CertificateType {
         }
     }
 
-    fn to_organization(&self) -> String {
+    fn to_organization(&self) -> &str {
         match self {
             CertificateType::OnlineRoot { organization, .. } => {
-                organization.clone().unwrap_or(DEFAULT_ORGANIZATION.to_owned())
+                organization.unwrap_or(DEFAULT_ORGANIZATION)
             }
             CertificateType::OnlineIntermediate { organization, .. } => {
-                organization.clone().unwrap_or(DEFAULT_ORGANIZATION.to_owned())
+                organization.unwrap_or(DEFAULT_ORGANIZATION)
             }
             CertificateType::OfflineRoot { organization, .. } => {
-                organization.clone().unwrap_or(DEFAULT_ORGANIZATION.to_owned())
+                organization.unwrap_or(DEFAULT_ORGANIZATION)
             }
             CertificateType::OfflineIntermediate { organization, .. } => {
-                organization.clone().unwrap_or(DEFAULT_ORGANIZATION.to_owned())
+                organization.unwrap_or(DEFAULT_ORGANIZATION)
             }
             CertificateType::ContentCredentials { organization, .. } => {
-                organization.clone().unwrap_or(DEFAULT_ORGANIZATION.to_owned())
+                organization.unwrap_or(DEFAULT_ORGANIZATION)
             }
         }
     }
-    
+
     fn to_common_name(&self) -> String {
         match self {
             CertificateType::OnlineRoot { organization, .. } => {
-                format_certificate_name(organization.clone(), "Root CA".to_string())
+                format_certificate_name(*organization, "Root CA")
             }
             CertificateType::OnlineIntermediate { organization, .. } => {
-                format_certificate_name(organization.clone(), "Intermediate CA".to_string())
+                format_certificate_name(*organization, "Intermediate CA")
             }
             CertificateType::OfflineRoot { organization, .. } => {
-                format_certificate_name(organization.clone(), "Offline Root CA".to_string())
+                format_certificate_name(*organization, "Offline Root CA")
             }
             CertificateType::OfflineIntermediate { organization, .. } => {
-                format_certificate_name(organization.clone(), "Offline Intermediate CA".to_string())
+                format_certificate_name(*organization, "Offline Intermediate CA")
             }
             CertificateType::ContentCredentials { organization, .. } => {
-                format_certificate_name(organization.clone(), "Content Credentials".to_string())
+                format_certificate_name(*organization, "Content Credentials")
             }
         }
     }
 }
 
-#[derive(Clone, Debug, uniffi::Object)]
-pub struct CertificateOptions {
+#[derive(Clone, Debug)]
+pub struct CertificateOptions<'a> {
     key: Arc<FileData>,
-    certificate_type: CertificateType,
+    certificate_type: CertificateType<'a>,
     parent_certificate: Option<Arc<Certificate>>,
-    email_address: Option<String>,
-    pgp_fingerprint: Option<String>,
+    email_address: Option<&'a str>,
+    #[allow(dead_code)]
+    pgp_fingerprint: Option<&'a str>,
 }
 
-#[uniffi::export]
-impl CertificateOptions {
-    #[uniffi::constructor]
-    pub fn new(
+impl CertificateOptions<'_> {
+    pub fn new<'a>(
         key: Arc<FileData>,
-        certificate_type: CertificateType,
+        certificate_type: CertificateType<'a>,
         parent_certificate: Option<Arc<Certificate>>,
-        email_address: Option<String>,
-        pgp_fingerprint: Option<String>,
-    ) -> Arc<CertificateOptions> {
+        email_address: Option<&'a str>,
+        pgp_fingerprint: Option<&'a str>,
+    ) -> Arc<CertificateOptions<'a>> {
         Arc::new(CertificateOptions {
             key,
             certificate_type,
@@ -154,16 +150,15 @@ impl CertificateOptions {
     }
 }
 
-#[derive(Clone, Debug, uniffi::Object)]
+#[derive(Clone, Debug)]
 pub struct Certificate {
     certificate_data: Arc<FileData>,
     private_key_data: Arc<FileData>,
+    #[allow(dead_code)]
     parent_certificate: Option<Arc<Certificate>>,
 }
 
-#[uniffi::export]
 impl Certificate {
-    #[uniffi::constructor]
     pub fn new(
         certificate_data: Arc<FileData>,
         private_key_data: Arc<FileData>,
@@ -177,11 +172,11 @@ impl Certificate {
     }
 
     pub fn get_certificate_bytes(&self) -> Result<Vec<u8>, SimpleC2PAError> {
-        return self.certificate_data.get_bytes();
+        self.certificate_data.get_bytes()
     }
 
     pub fn get_private_key_bytes(&self) -> Result<Vec<u8>, SimpleC2PAError> {
-        return self.private_key_data.get_bytes();
+        self.private_key_data.get_bytes()
     }
 }
 fn generate_serial_number() -> Result<Asn1Integer, SimpleC2PAError> {
@@ -191,36 +186,35 @@ fn generate_serial_number() -> Result<Asn1Integer, SimpleC2PAError> {
     let serial_number_bignum = BigNum::from_slice(&serial_number_bytes)?;
     let serial_number = serial_number_bignum.to_asn1_integer()?;
 
-    return Ok(serial_number);
+    Ok(serial_number)
 }
 
-fn create_name(options: Arc<CertificateOptions>) -> Result<X509Name, SimpleC2PAError> {
+fn create_name(options: &Arc<CertificateOptions>) -> Result<X509Name, SimpleC2PAError> {
     let mut name_builder = X509NameBuilder::new()?;
     name_builder.append_entry_by_text("CN", &options.certificate_type.to_common_name())?;
-    name_builder.append_entry_by_text("O", &options.certificate_type.to_organization())?;
+    name_builder.append_entry_by_text("O", options.certificate_type.to_organization())?;
 
-    if let Some(email_address) = options.email_address.clone() {
-        name_builder.append_entry_by_text("emailAddress", &email_address)?;
+    if let Some(email_address) = options.email_address {
+        name_builder.append_entry_by_text("emailAddress", email_address)?;
     }
 
     let name = name_builder.build();
 
-    return Ok(name);
+    Ok(name)
 }
 
-#[uniffi::export]
 pub fn create_certificate(
     options: Arc<CertificateOptions>,
 ) -> Result<Arc<Certificate>, SimpleC2PAError> {
     let serial_number = generate_serial_number()?;
     let private_key = PKey::private_key_from_pem(&options.key.get_bytes()?)?;
     let is_ca = options.certificate_type.is_ca();
-    let name = create_name(options.clone())?;
+    let name = create_name(&options)?;
 
     let mut cert_builder = X509::builder()?;
     cert_builder.set_version(2)?;
     cert_builder.set_subject_name(&name)?;
-    if let Some(parent_certificate) = options.parent_certificate.clone() {
+    if let Some(parent_certificate) = &options.parent_certificate {
         let parent_cert = X509::from_pem(&parent_certificate.certificate_data.get_bytes()?)?;
         cert_builder.set_issuer_name(parent_cert.subject_name())?;
     } else {
@@ -288,9 +282,8 @@ pub fn create_certificate(
     Ok(certificate)
 }
 
-#[uniffi::export]
 pub fn create_root_certificate(
-    organization: Option<String>,
+    organization: Option<&str>,
     validity_days: Option<u32>,
 ) -> Result<Arc<Certificate>, SimpleC2PAError> {
     let key = create_private_key().unwrap();
@@ -308,10 +301,9 @@ pub fn create_root_certificate(
     Ok(certificate)
 }
 
-#[uniffi::export]
 pub fn create_content_credentials_certificate(
     root_certificate: Option<Arc<Certificate>>,
-    organization: Option<String>,
+    organization: Option<&str>,
     validity_days: Option<u32>,
 ) -> Result<Arc<Certificate>, SimpleC2PAError> {
     let key = create_private_key().unwrap();
@@ -329,61 +321,8 @@ pub fn create_content_credentials_certificate(
     Ok(certificate)
 }
 
-#[uniffi::export]
 pub fn request_signed_certificate(
     _options: Arc<CertificateOptions>,
 ) -> Result<String, SimpleC2PAError> {
     Ok("not yet implemented".to_string())
 }
-
-/*
-pub fn create_certificate_signing_request(params: CertificateParams) -> Result<String> {
-    let private_key = PKey::private_key_from_pem(params.key.as_bytes())?;
-
-    let name = create_name(params)?;
-
-    let mut csr_builder = X509Req::builder()?;
-    csr_builder.set_version(2)?;
-    csr_builder.set_subject_name(&name)?;
-    csr_builder.set_pubkey(&private_key)?;
-    csr_builder.sign(&private_key, MessageDigest::sha512())?;
-    let csr = csr_builder.build();
-    let pem = csr.to_pem()?;
-
-    return Ok(String::from_utf8(pem)?);
-}
-
-pub fn request_content_credentials_certificate() -> Result<String> {
-    return Ok("not yet implemented".to_string());
-}
-
-pub fn create_certificate_from_signing_request(csr_pem: String) -> Result<String> {
-    let csr = X509Req::from_pem(csr_pem.as_bytes()).expect("Failed to decode CSR");
-    let ca_key_pem = include_str!("../test_keys/proofmode.pem");
-    let ca_privkey =
-        PKey::private_key_from_pem(ca_key_pem.as_bytes()).expect("Failed to decode private key");
-
-    csr.to_text()
-        .unwrap()
-        .lines()
-        .for_each(|line| println!("{:?}", line));
-    // let ca_cert_pem = include_str!("../test_keys/proofmode.pub");
-    // let ca_cert = X509::from_pem(ca_cert_pem.as_bytes()).expect("Failed to decode CA certificate");
-
-    let mut builder = X509::builder().expect("Failed to create X509 Builder");
-    builder
-        .set_subject_name(csr.subject_name())
-        .expect("Failed to set subject name");
-    builder
-        .set_pubkey(&csr.public_key().expect("Failed to get public key"))
-        .expect("Failed to set public key");
-    // Set other required attributes in the builder...
-    builder
-        .sign(&ca_privkey, openssl::hash::MessageDigest::sha256())
-        .expect("Failed to sign CSR");
-    let cert = builder.build();
-    let final_cert_pem = cert.to_pem()?;
-    let final_cert_pem_str = String::from_utf8(final_cert_pem.clone())?;
-    Ok(final_cert_pem_str)
-}
-*/
